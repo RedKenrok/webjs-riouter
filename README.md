@@ -1,4 +1,4 @@
-# Ri-oute
+# Riouter
 
 Alternative RiotJS router. Do note this package has not been battle tested yet, however feel free to help improve the package by testing it and providing feedback or reporting any issues you come across.
 
