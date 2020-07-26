@@ -961,12 +961,5 @@ const Route$1 = Route;
 const Router$1 = Router;
 const route = _route;
 const router = _router;
-var index = {
-  Route: Route$1,
-  Router: Router$1,
-  route,
-  router
-};
 
-export default index;
 export { Route$1 as Route, Router$1 as Router, route, router };

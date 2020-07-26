@@ -7,10 +7,3 @@ export const Route = _Route
 export const Router = _Router
 export const route = _route
 export const router = _router
-
-export default {
-  Route,
-  Router,
-  route,
-  router,
-}
