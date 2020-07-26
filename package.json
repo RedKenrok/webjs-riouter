@@ -1,7 +1,7 @@
 {
   "name": "riouter",
   "description": "Alternative RiotJS router.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "keywords": [
     "riouter",
     "riot",
@@ -22,7 +22,9 @@
   "bugs": {
     "url": "https://github.com/redkenrok/node-riouter/issues"
   },
-  "main": "dst/route.esm.js",
+  "main": "dst/riot.js",
+  "module": "dst/riot.esm.js",
+  "jsnext:main": "dst/riot.esm.js",
   "files": [
     "dst/",
     "src/"
