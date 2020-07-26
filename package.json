@@ -1,7 +1,7 @@
 {
   "name": "riouter",
   "description": "Alternative RiotJS router.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "keywords": [
     "riouter",
     "riot",
@@ -22,19 +22,19 @@
   "bugs": {
     "url": "https://github.com/redkenrok/node-riouter/issues"
   },
-  "main": "dst/riot.js",
-  "module": "dst/riot.esm.js",
-  "jsnext:main": "dst/riot.esm.js",
+  "main": "dst/riouter.js",
+  "module": "dst/riouter.esm.js",
+  "jsnext:main": "dst/riouter.esm.js",
   "files": [
     "dst/",
     "src/"
   ],
   "scripts": {
     "build": "yarn run build-umd && yarn run build-esm",
-    "build-esm": "rollup -c -e riot -f esm -o dst/rioute.esm.js",
-    "build-umd": "rollup -c -f umd -n route -e riot -o dst/rioute.js",
-    "develop-esm": "rollup -c -w -e riot -f esm -o dst/rioute.esm.js",
-    "develop-umd": "rollup -c -w -f umd -n route -e riot -o dst/rioute.js",
+    "build-esm": "rollup -c -e riot -f esm -o dst/riouter.esm.js",
+    "build-umd": "rollup -c -f umd -n route -e riot -o dst/riouter.js",
+    "develop-esm": "rollup -c -w -e riot -f esm -o dst/riouter.esm.js",
+    "develop-umd": "rollup -c -w -f umd -n route -e riot -o dst/riouter.js",
     "eslint": "eslint src/*.js src/**/*.js src/components/*.html --fix",
     "lint": "yarn run eslint",
     "prepublishOnly": "yarn run lint && yarn run build"
