@@ -1,0 +1,64 @@
+{
+  "name": "riouter",
+  "description": "Alternative RiotJS router.",
+  "version": "0.1.0",
+  "keywords": [
+    "riouter",
+    "riot",
+    "riotjs",
+    "riot.js",
+    "route",
+    "router",
+    "riot-route",
+    "riot-router"
+  ],
+  "author": "Ron Dekker (http://rondekker.nl)",
+  "license": "ISC",
+  "homepage": "https://github.com/redkenrok/node-riouter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redkenrok/node-riouter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/redkenrok/node-riouter/issues"
+  },
+  "main": "dst/route.esm.js",
+  "files": [
+    "dst/",
+    "src/"
+  ],
+  "scripts": {
+    "build": "yarn run build-umd && yarn run build-esm",
+    "build-esm": "rollup -c -e riot -f esm -o dst/rioute.esm.js",
+    "build-umd": "rollup -c -f umd -n route -e riot -o dst/rioute.js",
+    "develop-esm": "rollup -c -w -e riot -f esm -o dst/rioute.esm.js",
+    "develop-umd": "rollup -c -w -f umd -n route -e riot -o dst/rioute.js",
+    "eslint": "eslint src/*.js src/**/*.js src/components/*.html --fix",
+    "lint": "yarn run eslint",
+    "prepublishOnly": "yarn run lint && yarn run build"
+  },
+  "dependencies": {
+    "path-to-regexp": "^6.1.0"
+  },
+  "peerDependency": {
+    "riot": "^4.13.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@riotjs/babel-preset": "^1.0.0",
+    "eslint": "^7.4.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-html": "^6.0.2",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "riot": "^4.13.2",
+    "rollup": "^2.22.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-riot": "^4.0.2"
+  }
+}

@@ -1,0 +1,97 @@
+<riouter-router>
+  <script>
+    // Import external modules.
+    import { pure, __ } from 'riot'
+    // Import internal libraries.
+    import Router from '../utils/Router.js'
+    import { ROUTER_COMPONENT } from '../utils/symbols.js'
+
+    const { template, bindingTypes } = __.DOMBindings
+
+    const defer = window.requestAnimationFrame || window.setTimeout
+    const cancelDefer = window.cancelAnimationFrame || window.clearTimeout
+
+    export default pure(({ slots, attributes, props }) => {
+      const getAttribute = name => attributes && attributes.find(attribute => attribute.name === name)
+
+      const getBase = context => {
+        const base = getAttribute('base')
+        if (base) {
+          return base.evaluate(context)
+        }
+        return window.location.protocol + '//' + window.location.host
+      }
+
+      return {
+        // Variables.
+        deferred: null,
+        el: null,
+        root: null,
+        router: null,
+        slot: null,
+        // Lifecyle methods.
+        mount(element, context) {
+          if (!slots || !slots.length) {
+            return
+          }
+
+          // Set root element.
+          this.el = this.root = element
+          this.state = {}
+          const updateHistory = getAttribute('updateHistory')
+          this.router = new Router({
+            basePath: getBase(),
+            updateHistory: updateHistory && updateHistory !== 'false',
+          })
+
+          // Immidiatly push location.
+          this.router.push(window.location.href)
+
+          this.slot = template(null, [{
+            type: bindingTypes.SLOT,
+            name: 'default',
+          }])
+
+          // Add this to context.
+          context[ROUTER_COMPONENT] = this
+
+          const onBeforeStart = getAttribute('onBeforeStart')
+          if (onBeforeStart) {
+            onBeforeStart.evaluate(context)(this, this.router, this.router.pathCurrent)
+          }
+
+          this.slot.mount(this.root, {
+            slots,
+          }, context)
+
+          const onStart = getAttribute('onStart')
+          if (onStart) {
+            onStart.evaluate(context)(this, this.router, this.router.pathCurrent)
+          }
+        },
+        update(context) {
+          // Defer update to prevent endless recursion.
+          if (this.slot) {
+            cancelDefer(this.deferred)
+
+            this.deferred = defer(() => {
+              this.slot.update({}, this)
+            })
+          }
+        },
+        unmount(...args) {
+          // Unmount underlying components.
+          if (this.slot) {
+            this.slot.unmount(...args)
+          }
+
+          // Remove element.
+          this.root.remove()
+
+          // Destroy router.
+          this.router.destroy()
+        },
+      }
+    })
+  </script>
+</riouter-router>
