@@ -1,7 +1,7 @@
 {
   "name": "riouter",
   "description": "Alternative RiotJS router.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "keywords": [
     "riouter",
     "riot",
