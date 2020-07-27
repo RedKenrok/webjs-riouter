@@ -3,7 +3,6 @@ import { pathToRegexp } from 'path-to-regexp'
 // Import internal modules.
 import Dispatcher from './Dispatcher.js'
 import merge from './merge.js'
-import parseURL from './parseURL.js'
 
 export const pathToRegexpOptions = {
   sensitive: false,
@@ -41,15 +40,6 @@ export class Route extends Dispatcher {
    */
   match(path) {
     return this._regexp.test(path)
-  }
-
-  parse(path) {
-    const URL = parseURL(path)
-    if (this._regexp) {
-      const [, ...params] = this._regexp.exec(path)
-      URL.params = params
-    }
-    return URL
   }
 }
 

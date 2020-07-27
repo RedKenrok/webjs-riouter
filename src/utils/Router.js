@@ -1,7 +1,6 @@
 // Import local modules.
 import Dispatcher from './Dispatcher.js'
 import merge from './merge.js'
-import parseURL from './parseURL.js'
 import { pathToRegexpOptions, Route } from './Route.js'
 
 class Router extends Dispatcher {
@@ -19,23 +18,9 @@ class Router extends Dispatcher {
     this.routeCurrent = null
 
     this.routes = []
-
-    // Validate path type.
-    this.methods = [
-      path => [typeof (path) === 'string', path],
-    ]
-
-    // Remove basePath.
-    if (this._options.basePath) {
-      this.methods.push(
-        path => [true, path.replace(this._options.basePath, '')]
-      )
-    }
   }
 
   destroy() {
-    this.methods = null
-
     for (const route in this.routes) {
       route.destroy()
     }
@@ -63,19 +48,13 @@ class Router extends Dispatcher {
   }
 
   push(path) {
-    // Execute methods on path.
-    let pathNew = path
-    for (let i = 0; i < this.methods.length; i++) {
-      const method = this.methods[i]
-
-      const [success, value] = method(pathNew)
-      // If not a success exit early.
-      if (!success) {
-        return false
-      }
-      // Store resulting value.
-      pathNew = value
+    // Check type.
+    if (typeof (path) !== 'string') {
+      return false
     }
+
+    // Remove base url, if present.
+    const pathNew = path.replace(this._options.basePath, '')
     const pathIsNew = this.pathCurrent !== pathNew
     this.pathCurrent = pathNew
 
@@ -83,7 +62,7 @@ class Router extends Dispatcher {
     let routeNew = null
     for (let i = 0; i < this.routes.length; i++) {
       const route = this.routes[i]
-      if (!route.match(pathNew)) {
+      if (!route.match(this.pathCurrent)) {
         continue
       }
 
@@ -123,10 +102,6 @@ class Router extends Dispatcher {
         })
       }
     }
-  }
-
-  static parse(path) {
-    return parseURL(path, this._options.basePath)
   }
 }
 
