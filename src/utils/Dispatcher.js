@@ -9,7 +9,7 @@ class Dispatcher {
   /**
    * Destroy instance
    */
-  destroy() {
+  destroy () {
     this._events = null
   }
 
@@ -18,16 +18,7 @@ class Dispatcher {
    * @param {String} name Event name.
    * @param {Function} callback Callback function.
    */
-  addListener(name, callback) {
-    // Check if name is a string.
-    if (typeof (name) !== 'string') {
-      return false
-    }
-    // Check if callback is a function.
-    if (typeof (callback) !== 'function') {
-      return false
-    }
-
+  addListener (name, callback) {
     // Check if event by name exists. If not add it.
     if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
       this._events[name] = [
@@ -48,16 +39,7 @@ class Dispatcher {
    * @param {String} name Event name.
    * @param {Function} callback Callback function.
    */
-  removeListener(name, callback) {
-    // Check if name is a string.
-    if (typeof (name) !== 'string') {
-      return false
-    }
-    // Check if callback is a function.
-    if (typeof (callback) !== 'function') {
-      return false
-    }
-
+  removeListener (name, callback) {
     // Check if event by name exists.
     if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
       return
@@ -78,7 +60,7 @@ class Dispatcher {
    * Remove all listeners listening to the named event.
    * @param {String} name Optional event name.
    */
-  removeAllListeners(name) {
+  removeAllListeners (name) {
     // Check if event by name exists.
     if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
       return
@@ -93,7 +75,7 @@ class Dispatcher {
    * @param {String} name Event name.
    * @param {*} data Variables to give to the callback function.
    */
-  dispatch(name, ...data) {
+  dispatch (name, ...data) {
     // Check if event by name exists.
     if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
       return
@@ -105,7 +87,7 @@ class Dispatcher {
 
     // Execute callbacks.
     this._events[name].forEach(callback => {
-      callback(...data)
+      callback(...data) // eslint-disable-line
     })
   }
 }

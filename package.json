@@ -1,7 +1,7 @@
 {
   "name": "riouter",
+  "packagename": "Rioter",
   "description": "Alternative RiotJS router.",
-  "version": "0.2.0",
   "keywords": [
     "riouter",
     "riot",
@@ -12,8 +12,14 @@
     "riot-route",
     "riot-router"
   ],
-  "author": "Ron Dekker (http://rondekker.nl)",
-  "license": "ISC",
+  "author": {
+    "name": "Ron Dekker",
+    "website": "https://rondekker.com"
+  },
+  "version": "0.2.1",
+  "license": "MIT",
+  "main": "src/index.js",
+  "browser": "dst/riouter.js",
   "homepage": "https://github.com/redkenrok/node-riouter#readme",
   "repository": {
     "type": "git",
@@ -22,45 +28,49 @@
   "bugs": {
     "url": "https://github.com/redkenrok/node-riouter/issues"
   },
-  "main": "dst/riouter.js",
-  "module": "dst/riouter.esm.js",
-  "jsnext:main": "dst/riouter.esm.js",
   "files": [
     "dst/",
-    "src/"
+    "src/",
+    "README.md"
   ],
   "scripts": {
-    "build": "yarn run build-umd && yarn run build-esm",
-    "build-esm": "rollup -c -e riot -f esm -o dst/riouter.esm.js",
-    "build-umd": "rollup -c -f umd -n route -e riot -o dst/riouter.js",
-    "develop-esm": "rollup -c -w -e riot -f esm -o dst/riouter.esm.js",
-    "develop-umd": "rollup -c -w -f umd -n route -e riot -o dst/riouter.js",
-    "eslint": "eslint src/*.js src/**/*.js src/components/*.html --fix",
-    "lint": "yarn run eslint",
-    "prepublishOnly": "yarn run lint && yarn run build"
+    "build": "NODE_ENV=production rollup -c",
+    "build:example": "NODE_ENV=production rollup -c ./example/rollup.config.js",
+    "dev": "yarn run develop",
+    "dev:example": "yarn run develop:example",
+    "develop": "NODE_ENV=development rollup -c -w",
+    "develop:example": "NODE_ENV=development rollup -c ./example/rollup.config.js -w",
+    "lint": "eslint src/*.js src/**/*.js src/components/*.html example/src/*.js example/src/*.html --fix",
+    "prepublishOnly": "yarn run lint && yarn run build",
+    "serve": "yarn run serve"
   },
   "dependencies": {
-    "path-to-regexp": "^6.1.0"
+    "@riotjs/dom-bindings": "^5.0.1",
+    "@riotjs/util": "^2.0.0",
+    "path-to-regexp": "^6.2.0"
   },
   "peerDependency": {
-    "riot": "^4.13.2"
+    "riot": "5.x"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.5",
-    "@babel/preset-env": "^7.10.4",
+    "@babel/core": "^7.12.10",
+    "@babel/plugin-transform-runtime": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
     "@riotjs/babel-preset": "^1.0.0",
-    "eslint": "^7.4.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-html": "^6.0.2",
-    "eslint-plugin-import": "^2.22.0",
+    "@rollup/plugin-babel": "^5.2.2",
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.1",
+    "eslint": "^7.17.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-html": "^6.1.1",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "riot": "^4.13.2",
-    "rollup": "^2.22.0",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-riot": "^4.0.2"
+    "eslint-plugin-standard": "^5.0.0",
+    "riot": "^5.1.2",
+    "rollup": "^2.36.1",
+    "rollup-plugin-riot": "^5.0.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "serve": "^11.3.2"
   }
 }

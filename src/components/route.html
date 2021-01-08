@@ -1,11 +1,11 @@
 <riouter-route>
   <script>
     // Import external modules.
-    import { pure, __ } from 'riot'
-    // Import internal libraries.
-    import { ROUTER_COMPONENT } from '../utils/symbols.js'
+    import { template, bindingTypes } from '@riotjs/dom-bindings'
 
-    const { template, bindingTypes } = __.DOMBindings
+    // Import internal libraries.
+    import pure from '../utils/pure.js'
+    import { ROUTER_COMPONENT } from '../utils/symbols.js'
 
     export default pure(({ slots, attributes, props }) => {
       const getAttribute = name => attributes && attributes.find(attribute => attribute.name === name)

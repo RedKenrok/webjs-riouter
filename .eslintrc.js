@@ -24,13 +24,15 @@ module.exports = {
     'eslint-plugin-standard',
   ],
   rules: {
-    'comma-dangle': ['warn', {
-      arrays: 'always-multiline',
-      objects: 'always-multiline',
-      imports: 'never',
-      exports: 'never',
-      functions: 'never',
-    }],
+    'comma-dangle': [
+      'warn',
+      {
+        arrays: 'always-multiline',
+        objects: 'always-multiline',
+        imports: 'never',
+        exports: 'never',
+        functions: 'never',
+      }],
     indent: [
       'error',
       2,
@@ -42,6 +44,9 @@ module.exports = {
       'error',
       'unix',
     ],
+    'no-case-declarations': 0,
+    'no-cond-assign': 0,
+    'no-fallthrough': 0,
     quotes: [
       'error',
       'single',
@@ -51,11 +56,9 @@ module.exports = {
       'never',
     ],
     'space-before-function-paren': [
-      'error',
-      'never',
+      0,
+      'always',
     ],
-    'no-case-declarations': 0,
-    'standard/no-callback-literal': 0,
   },
   settings: {
     'eslint-plugin-html/indent': '+4',

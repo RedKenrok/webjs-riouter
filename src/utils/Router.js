@@ -1,15 +1,15 @@
 // Import local modules.
 import Dispatcher from './Dispatcher.js'
-import merge from './merge.js'
+import ObjectUtils from './ObjectUtils.js'
 import { pathToRegexpOptions, Route } from './Route.js'
 
 class Router extends Dispatcher {
   constructor(options = null) {
     super()
 
-    this._options = merge({
+    this._options = ObjectUtils.deepAssign({
       basePath: null,
-      updateHistory: null,
+      updateHistory: false,
 
       pathToRegexp: pathToRegexpOptions,
     }, options)
@@ -20,7 +20,7 @@ class Router extends Dispatcher {
     this.routes = []
   }
 
-  destroy() {
+  destroy () {
     for (const route in this.routes) {
       route.destroy()
     }
@@ -30,9 +30,9 @@ class Router extends Dispatcher {
     super.destroy()
   }
 
-  createRoute(path = null, options = null) {
+  createRoute (path = null, options = null) {
     // Create new route.
-    const route = new Route(path, merge(this._options.pathToRegexp, options))
+    const route = new Route(path, ObjectUtils.deepAssign(this._options.pathToRegexp, options))
 
     // Add route to list.
     this.routes.push(route)
@@ -47,7 +47,7 @@ class Router extends Dispatcher {
     return route
   }
 
-  push(path) {
+  push (path) {
     // Check type.
     if (typeof (path) !== 'string') {
       return false

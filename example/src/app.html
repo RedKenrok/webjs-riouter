@@ -1,0 +1,96 @@
+<app>
+  <!--
+    The base attribute checks whether it ends with a trailing slash, if not it quickly adds it.
+    The onRouterStart function will be called by the router when it has been initialized.
+    The updateHistory attribute is set which will automatically update the window.history's state.
+  -->
+  <router base="{ (window.location.href.slice(-1) === '/') ? window.location.href : (window.location.href + '/') }"
+    onStart="{ onRouterStart }" updateHistory="{ 'true' }">
+
+    <!-- Add elements which on click will trigger the route change. -->
+    <nav>
+      <span route="a">
+        Link A
+      </span>
+
+      <span route="b">
+        Link B
+      </span>
+
+      <span route="c">
+        Link C
+      </span>
+    </nav>
+
+    <!-- Add routes in router. -->
+    <main>
+      <!-- Set first route with a path of 'a' -->
+      <route path="a">
+        Route A
+      </route>
+
+      <!--
+        Create another route this time with a path of 'b'.
+        Add listeners to all the events emitted by the route when it changes.
+      -->
+      <route path="b" onBeforeMount="{ onRouteBeforeMount }" onMounted="{ onRouteMounted }"
+        onBeforeUnmount="{ onRouteBeforeUnmount }" onUnmounted="{ onRouteUnmounted }">
+        Route B
+      </route>
+
+      <route path="c">
+        Route C
+      </route>
+    </main>
+  </router>
+
+  <script>
+    // Import router.
+    import { router, route } from '../../src/index.js'
+
+    export default {
+      components: {
+        // Router.
+        route: route,
+        router: router,
+      },
+      // Router methods.
+      onRouterStart(routerComponent, router, currentRoute) {
+        console.log('Router "onRouterStart" event triggered: ', routerComponent, router, currentRoute)
+
+        // Get navigation elements.
+        this.root.querySelectorAll('span[route]').forEach(links => {
+          // Listen elements being clicked.
+          links.addEventListener('click', (_event) => {
+            // Get target with link.
+            const target = _event.target.closest('span[route]')
+            const targetRoute = target.getAttribute('route')
+            // Check if route is set and not already active.
+            if (!targetRoute || targetRoute === this.state.activeRoute) {
+              return
+            }
+            // Invoke route change.
+            this.state.activeRoute = targetRoute
+            router.push(this.state.activeRoute)
+          })
+        })
+
+        // Set initial router path to 'a'.
+        this.state.activeRoute = 'a'
+        router.push(this.state.activeRoute)
+      },
+      onRouteBeforeMount(routeComponent, route, path) {
+        console.log('Route "onBeforeMount" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      },
+      onRouteMounted(routeComponent, route, path) {
+        console.log('Route "onMounted" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      },
+      onRouteBeforeUnmount(routeComponent, route, path) {
+        console.log('Route "onBeforeUnmount" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      },
+      onRouteUnmounted(routeComponent, route, path) {
+        console.log('Route "onUnmounted" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      },
+    }
+  </script>
+</app>

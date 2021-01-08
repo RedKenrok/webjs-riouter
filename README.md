@@ -4,20 +4,20 @@ Alternative RiotJS router. Do note this package has not been battle tested yet, 
 
 ## Differences with [riot/route](https://github.com/riot/route)
 
-- Can have multiple router instances on a single page. Even a router within a route is possible.
-- Can control whether the browsers session history is changed by the router.
-- Does not have a `initDomListeners` method. (It is trivial to write a solution yourself.)
+- Riouter can have multiple router instances on a single page. Even a router within a route is possible.
+- Riouter can control whether the browsers session history is changed by the router.
+- Riouter does not have a `initDomListeners` method. (It is trivial to write a solution yourself, see the example directory's `app.html`.)
 
 ## Install
 
-```ZSH
-$ npm install riouter
+```
+npm install riouter
 ```
 
 OR
 
-```ZSH
-$ yarn add riouter
+```
+yarn add riouter
 ```
 
 ## Usage
@@ -40,3 +40,5 @@ TODO:
 ### route (component)
 
 TODO:
+
+## Example

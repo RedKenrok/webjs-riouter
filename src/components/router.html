@@ -1,12 +1,12 @@
 <riouter-router>
   <script>
     // Import external modules.
-    import { pure, __ } from 'riot'
+    import { template, bindingTypes } from '@riotjs/dom-bindings'
+
     // Import internal libraries.
+    import pure from '../utils/pure.js'
     import Router from '../utils/Router.js'
     import { ROUTER_COMPONENT } from '../utils/symbols.js'
-
-    const { template, bindingTypes } = __.DOMBindings
 
     const defer = window.requestAnimationFrame || window.setTimeout
     const cancelDefer = window.cancelAnimationFrame || window.clearTimeout
