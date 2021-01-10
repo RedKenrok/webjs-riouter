@@ -1,16 +1,14 @@
 {
   "name": "riouter",
   "packagename": "Rioter",
-  "description": "RiotJS router.",
+  "description": "Riot.js router.",
   "keywords": [
     "riouter",
     "riot",
     "riotjs",
     "riot.js",
     "route",
-    "router",
-    "riot-route",
-    "riot-router"
+    "router"
   ],
   "author": {
     "name": "Ron Dekker",
@@ -20,13 +18,13 @@
   "license": "MIT",
   "main": "src/index.js",
   "browser": "dst/riouter.js",
-  "homepage": "https://github.com/redkenrok/node-riouter#readme",
+  "homepage": "https://github.com/redkenrok/webjs-riouter#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/redkenrok/node-riouter.git"
+    "url": "git+https://github.com/redkenrok/webjs-riouter.git"
   },
   "bugs": {
-    "url": "https://github.com/redkenrok/node-riouter/issues"
+    "url": "https://github.com/redkenrok/webjs-riouter/issues"
   },
   "files": [
     "dst/",

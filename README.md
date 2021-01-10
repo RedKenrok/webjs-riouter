@@ -1,3 +1,14 @@
+<div align="center">
+
+[![GitHub Repository](https://img.shields.io/static/v1?label=GitHub&message=%20&style=flat-square&color=green&logo=github&maxAge=3600)](https://github.com/redkenrok/webjs-riouter/)
+[![License agreement](https://img.shields.io/github/license/redkenrok/webjs-riouter.svg?label=License&style=flat-square&maxAge=86400)](https://github.com/redkenrok/webjs-riouter/blob/master/LICENSE)
+[![Open issues on GitHub](https://img.shields.io/github/issues/redkenrok/webjs-riouter.svg?label=Issues&style=flat-square&maxAge=86400)](https://github.com/redkenrok/webjs-riouter/issues)
+[![npm @latest version](https://img.shields.io/npm/v/riouter.svg?label=Version&style=flat-square&maxAge=3600)](https://www.npmjs.com/package/riouter)
+
+</div>
+
+<hr/>
+
 # Riouter
 
 [Riot.js](https://github.com/riot) router.
