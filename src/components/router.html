@@ -53,16 +53,16 @@
 
           const onBeforeStart = getAttribute('onBeforeStart')
           if (onBeforeStart) {
-            onBeforeStart.evaluate(context)(this, this.router, this.router.getPath())
+            onBeforeStart.evaluate(context)(this, this.router)
           }
 
           this.slot.mount(this.root, {
             slots,
           }, context)
 
-          const onStart = getAttribute('onStart')
-          if (onStart) {
-            onStart.evaluate(context)(this, this.router, this.router.getPath())
+          const onStarted = getAttribute('onStarted')
+          if (onStarted) {
+            onStarted.evaluate(context)(this, this.router)
           }
         },
         unmount(...args) {

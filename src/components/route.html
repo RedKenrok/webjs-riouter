@@ -32,11 +32,11 @@
           // Get router from parent component.
           this.router = context[ROUTER_COMPONENT].router
 
-          this.path = this.root.getAttribute('path')
-          if (!this.path) {
+          this.route = this.root.getAttribute('path')
+          if (!this.route) {
             throw new Error('No path found for route component.')
           }
-          this.route = this.router.createRoute(this.path)
+          this.router.addRoute(this.route)
 
           this.handleRouteChange = ({ route }) => {
             const active = this.route === route
@@ -56,7 +56,7 @@
             // Dispatch on mounted event.
             const onBeforeMount = getAttribute('onBeforeMount')
             if (onBeforeMount) {
-              onBeforeMount.evaluate(context)(this, this.route, this.router.getPath())
+              onBeforeMount.evaluate(context)(this, this.router, this.route)
             }
 
             const element = document.createElement('div')
@@ -68,13 +68,13 @@
             // Dispatch on mounted event.
             const onMounted = getAttribute('onMounted')
             if (onMounted) {
-              onMounted.evaluate(context)(this, this.route, this.router.getPath())
+              onMounted.evaluate(context)(this, this.router, this.route)
             }
           } else {
             // Dispatch on unmounted event.
             const onBeforeUnmount = getAttribute('onBeforeUnmount')
             if (onBeforeUnmount) {
-              onBeforeUnmount.evaluate(context)(this, this.route, this.router.getPath())
+              onBeforeUnmount.evaluate(context)(this, this.router, this.route)
             }
 
             this.slot.unmount({
@@ -84,7 +84,7 @@
             // Dispatch on unmounted event.
             const onUnmounted = getAttribute('onUnmounted')
             if (onUnmounted) {
-              onUnmounted.evaluate(context)(this, this.route, this.router.getPath())
+              onUnmounted.evaluate(context)(this, this.router, this.route)
             }
           }
         },
@@ -93,7 +93,7 @@
           this.router.removeListener('pushed', this.handleRouteChange)
 
           // Remove route from router.
-          this.router.removeRoute(this.path)
+          this.router.removeRoute(this.route)
 
           // Unmount slot.
           this.slot.unmount(...args)

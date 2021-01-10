@@ -5,7 +5,7 @@
     The updateHistory attribute is set which will automatically update the window.history's state.
   -->
   <router base="{ (window.location.href.slice(-1) === '/') ? window.location.href : (window.location.href + '/') }"
-    onStart="{ onRouterStart }" updateHistory="{ true }">
+    onStarted="{ onRouterStarted }" updateHistory="{ true }">
 
     <!-- Add elements which on click will trigger the route change. -->
     <nav>
@@ -24,13 +24,13 @@
 
     <!-- Add routes in router. -->
     <main>
-      <!-- Set first route with a path of 'a' -->
+      <!-- Add first route with a path of 'a' -->
       <route path="a">
         Route A
       </route>
 
       <!--
-        Create another route this time with a path of 'b'.
+        Add another route this time with a path of 'b'.
         Add listeners to all the events emitted by the route when it changes.
       -->
       <route path="b" onBeforeMount="{ onRouteBeforeMount }" onMounted="{ onRouteMounted }"
@@ -45,7 +45,7 @@
   </router>
 
   <script>
-    // Import router.
+    // Import router components.
     import { router, route } from '../../src/index.js'
 
     export default {
@@ -54,9 +54,12 @@
         route: route,
         router: router,
       },
-      // Router methods.
-      onRouterStart(routerComponent, router, currentRoute) {
-        console.log('Router "onRouterStart" event triggered: ', routerComponent, router, currentRoute)
+      // Router functions.
+      onRouterBeforeStart(routerComponent, router) {
+        console.log('Router "onBeforeStart" event triggered: ', routerComponent, router)
+      },
+      onRouterStarted(routerComponent, router) {
+        console.log('Router "onStarted" event triggered: ', routerComponent, router)
 
         // Get navigation elements.
         this.root.querySelectorAll('span[route]').forEach(links => {
@@ -79,17 +82,18 @@
         this.state.activeRoute = 'a'
         router.push(this.state.activeRoute)
       },
-      onRouteBeforeMount(routeComponent, route, path) {
-        console.log('Route "onBeforeMount" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      // Route functions.
+      onRouteBeforeMount(routeComponent, router, route) {
+        console.log('Route "onBeforeMount" event triggered: ', '\n', routeComponent, '\n', router, '\n', route)
       },
-      onRouteMounted(routeComponent, route, path) {
-        console.log('Route "onMounted" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      onRouteMounted(routeComponent, router, route) {
+        console.log('Route "onMounted" event triggered: ', '\n', routeComponent, '\n', router, '\n', route)
       },
-      onRouteBeforeUnmount(routeComponent, route, path) {
-        console.log('Route "onBeforeUnmount" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      onRouteBeforeUnmount(routeComponent, router, route) {
+        console.log('Route "onBeforeUnmount" event triggered: ', '\n', routeComponent, '\n', router, '\n', route)
       },
-      onRouteUnmounted(routeComponent, route, path) {
-        console.log('Route "onUnmounted" event triggered: ', '\n', routeComponent, '\n', route, '\n', path)
+      onRouteUnmounted(routeComponent, router, route) {
+        console.log('Route "onUnmounted" event triggered: ', '\n', routeComponent, '\n', router, '\n', route)
       },
     }
   </script>

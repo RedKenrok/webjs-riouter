@@ -300,13 +300,13 @@
 
     class Dispatcher {
       /**
-       * Create a new EventDispatcher instance.
+       * Create a dispatcher instance.
        */
       constructor() {
         this._events = {};
       }
       /**
-       * Destroy instance
+       * Destroy instance.
        */
 
 
@@ -359,14 +359,18 @@
         }
       }
       /**
-       * Remove all listeners listening to the named event.
+       * Remove all listeners listening to the dispatcher or just the named events.
        * @param {String} name Optional event name.
        */
 
 
       removeAllListeners(name) {
+        if (name === void 0) {
+          name = null;
+        }
+
         // Check if event by name exists.
-        if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
+        if (name && !Object.prototype.hasOwnProperty.call(this._events, name)) {
           return;
         } // Reset event with specified name.
 
@@ -435,27 +439,25 @@
         return this._pathCurrent;
       }
 
-      createRoute(path, options) {
+      addRoute(path, options) {
         if (options === void 0) {
           options = {};
         }
 
-        // Create new route.
+        // Create routes test function.
         const regexp = pathToRegexp(path, [], options);
 
-        const match = _path => {
+        const test = _path => {
           return regexp.test(_path);
         }; // Add route to list.
 
 
-        this._routes[path] = match; // Dispatch create event.
+        this._routes[path] = test; // Dispatch add event.
 
-        this.dispatch('created', {
+        this.dispatch('added', {
           route: path,
           router: this
-        }); // Return route.
-
-        return path;
+        });
       }
 
       removeRoute(path) {
@@ -469,39 +471,49 @@
       push(path) {
         // Remove base url, if present.
         const pathNew = path.replace(this._options.basePath, '');
-        const pathIsNew = this._pathCurrent !== pathNew;
-        this._pathCurrent = pathNew; // Find matching routes.
+
+        if (this._pathCurrent === pathNew) {
+          return true;
+        } // Find matching routes.
+
+
+        let routeNew = null;
 
         for (const routePath in this._routes) {
           const match = this._routes[routePath];
 
-          if (!match(this._pathCurrent)) {
+          if (!match(pathNew)) {
             continue;
           }
 
-          this._routeCurrent = routePath;
+          routeNew = routePath;
           break;
         }
 
-        if (pathIsNew) {
-          // Update page history if options set and window global exists.
-          if (this._options.updateHistory && typeof window !== 'undefined') {
-            // Construct url.
-            const url = path.includes(this._options.basePath) ? path : this._options.basePath + path; // Check if url is not current url.
-
-            if (url !== window.history.location) {
-              // Add path to history.
-              window.history.pushState(null, window.document.title, url);
-            }
-          } // Dispatch event on router.
-
-
-          this.dispatch('pushed', {
-            path: this._pathCurrent,
-            route: this._routeCurrent,
-            router: this
-          });
+        if (!routeNew) {
+          return false;
         }
+
+        this._pathCurrent = pathNew;
+        this._routeCurrent = routeNew; // Update page history if options set and window global exists.
+
+        if (this._options.updateHistory && typeof window !== 'undefined') {
+          // Construct url.
+          const url = path.includes(this._options.basePath) ? path : this._options.basePath + path; // Check if url is not current url.
+
+          if (url !== window.history.location) {
+            // Add path to history.
+            window.history.pushState(null, window.document.title, url);
+          }
+        } // Dispatch event on router.
+
+
+        this.dispatch('pushed', {
+          path: this._pathCurrent,
+          router: this,
+          route: this._routeCurrent
+        });
+        return true;
       }
 
     }
@@ -1963,11 +1975,11 @@
               // Get router from parent component.
               this.router = context[ROUTER_COMPONENT].router;
 
-              this.path = this.root.getAttribute('path');
-              if (!this.path) {
+              this.route = this.root.getAttribute('path');
+              if (!this.route) {
                 throw new Error('No path found for route component.')
               }
-              this.route = this.router.createRoute(this.path);
+              this.router.addRoute(this.route);
 
               this.handleRouteChange = ({ route }) => {
                 const active = this.route === route;
@@ -1987,7 +1999,7 @@
                 // Dispatch on mounted event.
                 const onBeforeMount = getAttribute('onBeforeMount');
                 if (onBeforeMount) {
-                  onBeforeMount.evaluate(context)(this, this.route, this.router.getPath());
+                  onBeforeMount.evaluate(context)(this, this.router, this.route);
                 }
 
                 const element = document.createElement('div');
@@ -1999,13 +2011,13 @@
                 // Dispatch on mounted event.
                 const onMounted = getAttribute('onMounted');
                 if (onMounted) {
-                  onMounted.evaluate(context)(this, this.route, this.router.getPath());
+                  onMounted.evaluate(context)(this, this.router, this.route);
                 }
               } else {
                 // Dispatch on unmounted event.
                 const onBeforeUnmount = getAttribute('onBeforeUnmount');
                 if (onBeforeUnmount) {
-                  onBeforeUnmount.evaluate(context)(this, this.route, this.router.getPath());
+                  onBeforeUnmount.evaluate(context)(this, this.router, this.route);
                 }
 
                 this.slot.unmount({
@@ -2015,7 +2027,7 @@
                 // Dispatch on unmounted event.
                 const onUnmounted = getAttribute('onUnmounted');
                 if (onUnmounted) {
-                  onUnmounted.evaluate(context)(this, this.route, this.router.getPath());
+                  onUnmounted.evaluate(context)(this, this.router, this.route);
                 }
               }
             },
@@ -2024,7 +2036,7 @@
               this.router.removeListener('pushed', this.handleRouteChange);
 
               // Remove route from router.
-              this.router.removeRoute(this.path);
+              this.router.removeRoute(this.route);
 
               // Unmount slot.
               this.slot.unmount(...args);
@@ -2087,16 +2099,16 @@
 
               const onBeforeStart = getAttribute('onBeforeStart');
               if (onBeforeStart) {
-                onBeforeStart.evaluate(context)(this, this.router, this.router.getPath());
+                onBeforeStart.evaluate(context)(this, this.router);
               }
 
               this.slot.mount(this.root, {
                 slots,
               }, context);
 
-              const onStart = getAttribute('onStart');
-              if (onStart) {
-                onStart.evaluate(context)(this, this.router, this.router.getPath());
+              const onStarted = getAttribute('onStarted');
+              if (onStarted) {
+                onStarted.evaluate(context)(this, this.router);
               }
             },
             unmount(...args) {

@@ -1,13 +1,13 @@
 class Dispatcher {
   /**
-   * Create a new EventDispatcher instance.
+   * Create a dispatcher instance.
    */
   constructor() {
     this._events = {}
   }
 
   /**
-   * Destroy instance
+   * Destroy instance.
    */
   destroy () {
     this._events = null
@@ -57,12 +57,12 @@ class Dispatcher {
   }
 
   /**
-   * Remove all listeners listening to the named event.
+   * Remove all listeners listening to the dispatcher or just the named events.
    * @param {String} name Optional event name.
    */
-  removeAllListeners (name) {
+  removeAllListeners (name = null) {
     // Check if event by name exists.
-    if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
+    if (name && !Object.prototype.hasOwnProperty.call(this._events, name)) {
       return
     }
 
