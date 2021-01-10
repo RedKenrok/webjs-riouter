@@ -1,12 +1,13 @@
 <riouter-router>
   <script>
     // Import external modules.
-    import { template, bindingTypes } from '@riotjs/dom-bindings'
+    import bindingTypes from '@riotjs/util/binding-types.js'
+    import template from '@riotjs/dom-bindings/src/template.js'
 
     // Import internal libraries.
-    import pure from '../utils/pure.js'
-    import Router from '../utils/Router.js'
-    import { ROUTER_COMPONENT } from '../utils/symbols.js'
+    import Router from '../Router.js'
+    import pure from '../util/pure.js'
+    import { ROUTER_COMPONENT } from '../util/symbols.js'
 
     const defer = window.requestAnimationFrame || window.setTimeout
     const cancelDefer = window.cancelAnimationFrame || window.clearTimeout
@@ -23,12 +24,6 @@
       }
 
       return {
-        // Variables.
-        deferred: null,
-        el: null,
-        root: null,
-        router: null,
-        slot: null,
         // Lifecyle methods.
         mount(element, context) {
           if (!slots || !slots.length) {
@@ -38,10 +33,11 @@
           // Set root element.
           this.el = this.root = element
           this.state = {}
-          const updateHistory = getAttribute('updateHistory')
+          let updateHistory = getAttribute('updateHistory')
+          updateHistory = updateHistory ? (!!updateHistory.evaluate(context)) : false
           this.router = new Router({
             basePath: getBase(),
-            updateHistory: updateHistory && updateHistory !== 'false',
+            updateHistory: updateHistory,
           })
 
           // Immidiatly push location.
@@ -57,7 +53,7 @@
 
           const onBeforeStart = getAttribute('onBeforeStart')
           if (onBeforeStart) {
-            onBeforeStart.evaluate(context)(this, this.router, this.router.pathCurrent)
+            onBeforeStart.evaluate(context)(this, this.router, this.router.getPath())
           }
 
           this.slot.mount(this.root, {
@@ -66,17 +62,7 @@
 
           const onStart = getAttribute('onStart')
           if (onStart) {
-            onStart.evaluate(context)(this, this.router, this.router.pathCurrent)
-          }
-        },
-        update(context) {
-          // Defer update to prevent endless recursion.
-          if (this.slot) {
-            cancelDefer(this.deferred)
-
-            this.deferred = defer(() => {
-              this.slot.update({}, this)
-            })
+            onStart.evaluate(context)(this, this.router, this.router.getPath())
           }
         },
         unmount(...args) {
@@ -90,6 +76,18 @@
 
           // Destroy router.
           this.router.destroy()
+        },
+        update(context) {
+          // Defer update to prevent endless recursion.
+          if (this.slot) {
+            if (this.deferred) {
+              cancelDefer(this.deferred)
+            }
+
+            this.deferred = defer(() => {
+              this.slot.update({}, this)
+            })
+          }
         },
       }
     })

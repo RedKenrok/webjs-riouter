@@ -73,7 +73,7 @@ class Dispatcher {
   /**
    * Invokes the callback functions matching the event name.
    * @param {String} name Event name.
-   * @param {*} data Variables to give to the callback function.
+   * @param {Any} data Variables to give to the callback function.
    */
   dispatch (name, ...data) {
     // Check if event by name exists.

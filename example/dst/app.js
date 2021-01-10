@@ -2497,15 +2497,6 @@
      * @param {Function} callback Callback function.
      */
     addListener (name, callback) {
-      // Check if name is a string.
-      if (typeof (name) !== 'string') {
-        return false
-      }
-      // Check if callback is a function.
-      if (typeof (callback) !== 'function') {
-        return false
-      }
-
       // Check if event by name exists. If not add it.
       if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
         this._events[name] = [
@@ -2527,15 +2518,6 @@
      * @param {Function} callback Callback function.
      */
     removeListener (name, callback) {
-      // Check if name is a string.
-      if (typeof (name) !== 'string') {
-        return false
-      }
-      // Check if callback is a function.
-      if (typeof (callback) !== 'function') {
-        return false
-      }
-
       // Check if event by name exists.
       if (!Object.prototype.hasOwnProperty.call(this._events, name)) {
         return
@@ -2569,7 +2551,7 @@
     /**
      * Invokes the callback functions matching the event name.
      * @param {String} name Event name.
-     * @param {*} data Variables to give to the callback function.
+     * @param {Any} data Variables to give to the callback function.
      */
     dispatch (name, ...data) {
       // Check if event by name exists.
@@ -2588,163 +2570,84 @@
     }
   }
 
-  class ObjectUtils {
-    /**
-     * Deeply assign a series of objects properties together.
-     * @param {Object} target Target object to assign onto.
-     * @param  {...Object} sources Sources to assign with.
-     * @returns {Object} Target object with sources values assigned.
-     */
-    static deepAssign (target, ...sources) {
-      if (!sources.length) {
-        return target
-      }
-      const source = sources.shift();
-
-      if (ObjectUtils.isObject(target) && ObjectUtils.isObject(source)) {
-        for (const key in source) {
-          if (ObjectUtils.isObject(source[key])) {
-            if (!target[key]) {
-              Object.assign(target, {
-                [key]: {},
-              });
-            }
-            ObjectUtils.deepAssign(target[key], source[key]);
-          } else {
-            Object.assign(target, {
-              [key]: source[key],
-            });
-          }
-        }
-      }
-
-      return ObjectUtils.deepAssign(target, ...sources)
-    }
-
-    /**
-     * Check whether the value is an object.
-     * @param {Any} value Value of unknown type.
-     * @returns {Boolean} Whether the value is an object.
-     */
-    static isObject (value) {
-      return (value && typeof value === 'object' && !Array.isArray(value))
-    }
-  }
-
   // Import external modules.
-
-  const pathToRegexpOptions = {
-    sensitive: false,
-    strict: false,
-    end: true,
-    start: true,
-    delimiter: '/#?',
-    encode: undefined,
-    endsWith: undefined,
-    prefixes: './',
-  };
-
-  class Route extends Dispatcher {
-    constructor(path, options) {
-      super();
-
-      this._options = ObjectUtils.deepAssign(pathToRegexpOptions, options);
-
-      this.path = path;
-
-      this._regexp = pathToRegexp(this.path, [], this._options);
-    }
-
-    destroy () {
-      this._regexp = null;
-      this.path = null;
-      this._options = null;
-
-      super.destroy();
-    }
-
-    /**
-     * Check if path matches route
-     * @param {String} path Path to match against
-     */
-    match (path) {
-      return this._regexp.test(path)
-    }
-  }
-
-  // Import local modules.
 
   class Router extends Dispatcher {
     constructor(options = null) {
       super();
 
-      this._options = ObjectUtils.deepAssign({
-        basePath: null,
+      // Overwrite default with given options.
+      this._options = Object.assign({
+        basePath: '',
         updateHistory: false,
-
-        pathToRegexp: pathToRegexpOptions,
+        pathToRegexp: {},
       }, options);
 
-      this.pathCurrent = null;
-      this.routeCurrent = null;
-
-      this.routes = [];
+      this._pathCurrent = null;
+      this._routes = {};
+      this._routeCurrent = null;
     }
 
     destroy () {
-      for (const route in this.routes) {
-        route.destroy();
-      }
-
       this._options = null;
+      this._pathCurrent = null;
+      this._routeCurrent = null;
+      this._routes = null;
 
       super.destroy();
     }
 
-    createRoute (path = null, options = null) {
+    getPath () {
+      return this._pathCurrent
+    }
+
+    createRoute (path, options = {}) {
       // Create new route.
-      const route = new Route(path, ObjectUtils.deepAssign(this._options.pathToRegexp, options));
+      const regexp = pathToRegexp(path, [], options);
+      const match = (_path) => {
+        return regexp.test(_path)
+      };
 
       // Add route to list.
-      this.routes.push(route);
+      this._routes[path] = match;
 
       // Dispatch create event.
-      this.dispatch('create', {
-        routes: this.routes,
-        route: route,
+      this.dispatch('created', {
+        route: path,
+        router: this,
       });
 
       // Return route.
-      return route
+      return path
+    }
+
+    removeRoute (path) {
+      delete this._routes[path];
+    }
+
+    getRoutes () {
+      return Object.keys(this._routes)
     }
 
     push (path) {
-      // Check type.
-      if (typeof (path) !== 'string') {
-        return false
-      }
-
       // Remove base url, if present.
       const pathNew = path.replace(this._options.basePath, '');
-      const pathIsNew = this.pathCurrent !== pathNew;
-      this.pathCurrent = pathNew;
+      const pathIsNew = this._pathCurrent !== pathNew;
+      this._pathCurrent = pathNew;
 
       // Find matching routes.
-      let routeNew = null;
-      for (let i = 0; i < this.routes.length; i++) {
-        const route = this.routes[i];
-        if (!route.match(this.pathCurrent)) {
+      for (const routePath in this._routes) {
+        const match = this._routes[routePath];
+        if (!match(this._pathCurrent)) {
           continue
         }
 
-        // Store current route.
-        routeNew = route;
+        this._routeCurrent = routePath;
+        break
       }
-      const routeIsNew = this.routeCurrent !== routeNew;
-      this.routeCurrent = routeNew;
 
       if (pathIsNew) {
-        // Update page history.
+        // Update page history if options set and window global exists.
         if (this._options.updateHistory && typeof window !== 'undefined') {
           // Construct url.
           const url = path.includes(this._options.basePath) ? path : this._options.basePath + path;
@@ -2756,25 +2659,28 @@
         }
 
         // Dispatch event on router.
-        this.dispatch('push', {
+        this.dispatch('pushed', {
+          path: this._pathCurrent,
+          route: this._routeCurrent,
           router: this,
-          route: this.routeCurrent,
-          path: this.pathCurrent,
         });
-      }
-
-      if (routeIsNew) {
-        // Dispatch event on route.
-        if (this.routeCurrent) {
-          this.routeCurrent.dispatch('push', {
-            router: this,
-            route: this.routeCurrent,
-            path: this.pathCurrent,
-          });
-        }
       }
     }
   }
+
+  const EACH$1 = 0;
+  const IF$1 = 1;
+  const SIMPLE$1 = 2;
+  const TAG$1 = 3;
+  const SLOT$1 = 4;
+
+  var bindingTypes$1 = {
+    EACH: EACH$1,
+    IF: IF$1,
+    SIMPLE: SIMPLE$1,
+    TAG: TAG$1,
+    SLOT: SLOT$1
+  };
 
   /**
    * Convert a string from camel case to dash-case
@@ -2853,20 +2759,6 @@
   const 
     IS_PURE_SYMBOL$1 = Symbol.for('pure'),
     PARENT_KEY_SYMBOL$1 = Symbol('parent');
-
-  const EACH$1 = 0;
-  const IF$1 = 1;
-  const SIMPLE$1 = 2;
-  const TAG$1 = 3;
-  const SLOT$1 = 4;
-
-  var bindingTypes$1 = {
-    EACH: EACH$1,
-    IF: IF$1,
-    SIMPLE: SIMPLE$1,
-    TAG: TAG$1,
-    SLOT: SLOT$1
-  };
 
   const ATTRIBUTE$1 = 0;
   const EVENT$1 = 1;
@@ -4189,16 +4081,22 @@
     }
   }
 
-  const pure = function (func) {
-    func[IS_PURE_SYMBOL$1] = true;
-    return func
+  /**
+   * Marks given component as pure component. Is a copy of Riot's own pure function.
+   * Because I don't want to import the entire library for just one function.
+   * @param {Function|Object} component Function to add pure symbol to.
+   * @returns {Function|Object} Component marked as pure.
+   */
+  const pure = function (component) {
+    component[IS_PURE_SYMBOL$1] = true;
+    return component
   };
 
-  const ROUTER_COMPONENT = Symbol('router');
+  const ROUTER_COMPONENT = Symbol('riouter');
 
   // Import external modules.
 
-  var _route = {
+  var route = {
     'css': null,
 
     'exports': pure(
@@ -4206,12 +4104,6 @@
         const getAttribute = name => attributes && attributes.find(attribute => attribute.name === name);
 
         return {
-          // Variables
-          active: null,
-          el: null,
-          root: null,
-          router: null,
-          state: null,
           // Lifcycle methods.
           mount(element, context) {
             // Exit early if there are no slots.
@@ -4232,11 +4124,11 @@
             // Get router from parent component.
             this.router = context[ROUTER_COMPONENT].router;
 
-            const path = this.root.getAttribute('path');
-            if (!path) {
+            this.path = this.root.getAttribute('path');
+            if (!this.path) {
               throw new Error('No path found for route component.')
             }
-            this.route = this.router.createRoute(path);
+            this.route = this.router.createRoute(this.path);
 
             this.handleRouteChange = ({ route }) => {
               const active = this.route === route;
@@ -4249,14 +4141,14 @@
               this.update(context);
             };
 
-            this.router.addListener('push', this.handleRouteChange);
+            this.router.addListener('pushed', this.handleRouteChange);
           },
           update(context) {
             if (this.active) {
               // Dispatch on mounted event.
               const onBeforeMount = getAttribute('onBeforeMount');
               if (onBeforeMount) {
-                onBeforeMount.evaluate(context)(this, this.route, this.router.pathCurrent);
+                onBeforeMount.evaluate(context)(this, this.route, this.router.getPath());
               }
 
               const element = document.createElement('div');
@@ -4268,13 +4160,13 @@
               // Dispatch on mounted event.
               const onMounted = getAttribute('onMounted');
               if (onMounted) {
-                onMounted.evaluate(context)(this, this.route, this.router.pathCurrent);
+                onMounted.evaluate(context)(this, this.route, this.router.getPath());
               }
             } else {
               // Dispatch on unmounted event.
               const onBeforeUnmount = getAttribute('onBeforeUnmount');
               if (onBeforeUnmount) {
-                onBeforeUnmount.evaluate(context)(this, this.route, this.router.pathCurrent);
+                onBeforeUnmount.evaluate(context)(this, this.route, this.router.getPath());
               }
 
               this.slot.unmount({
@@ -4284,13 +4176,16 @@
               // Dispatch on unmounted event.
               const onUnmounted = getAttribute('onUnmounted');
               if (onUnmounted) {
-                onUnmounted.evaluate(context)(this, this.route, this.router.pathCurrent);
+                onUnmounted.evaluate(context)(this, this.route, this.router.getPath());
               }
             }
           },
           unmount(...args) {
             // Stop listening to router changes
-            this.router.removeListener('push', this.handleRouteChange);
+            this.router.removeListener('pushed', this.handleRouteChange);
+
+            // Remove route from router.
+            this.router.removeRoute(this.path);
 
             // Unmount slot.
             this.slot.unmount(...args);
@@ -4308,7 +4203,7 @@
   const defer = window.requestAnimationFrame || window.setTimeout;
   const cancelDefer = window.cancelAnimationFrame || window.clearTimeout;
 
-  var _router = {
+  var router = {
     'css': null,
 
     'exports': pure(
@@ -4324,12 +4219,6 @@
         };
 
         return {
-          // Variables.
-          deferred: null,
-          el: null,
-          root: null,
-          router: null,
-          slot: null,
           // Lifecyle methods.
           mount(element, context) {
             if (!slots || !slots.length) {
@@ -4339,10 +4228,11 @@
             // Set root element.
             this.el = this.root = element;
             this.state = {};
-            const updateHistory = getAttribute('updateHistory');
+            let updateHistory = getAttribute('updateHistory');
+            updateHistory = updateHistory ? (!!updateHistory.evaluate(context)) : false;
             this.router = new Router({
               basePath: getBase(),
-              updateHistory: updateHistory && updateHistory !== 'false',
+              updateHistory: updateHistory,
             });
 
             // Immidiatly push location.
@@ -4358,7 +4248,7 @@
 
             const onBeforeStart = getAttribute('onBeforeStart');
             if (onBeforeStart) {
-              onBeforeStart.evaluate(context)(this, this.router, this.router.pathCurrent);
+              onBeforeStart.evaluate(context)(this, this.router, this.router.getPath());
             }
 
             this.slot.mount(this.root, {
@@ -4367,17 +4257,7 @@
 
             const onStart = getAttribute('onStart');
             if (onStart) {
-              onStart.evaluate(context)(this, this.router, this.router.pathCurrent);
-            }
-          },
-          update(context) {
-            // Defer update to prevent endless recursion.
-            if (this.slot) {
-              cancelDefer(this.deferred);
-
-              this.deferred = defer(() => {
-                this.slot.update({}, this);
-              });
+              onStart.evaluate(context)(this, this.router, this.router.getPath());
             }
           },
           unmount(...args) {
@@ -4392,6 +4272,18 @@
             // Destroy router.
             this.router.destroy();
           },
+          update(context) {
+            // Defer update to prevent endless recursion.
+            if (this.slot) {
+              if (this.deferred) {
+                cancelDefer(this.deferred);
+              }
+
+              this.deferred = defer(() => {
+                this.slot.update({}, this);
+              });
+            }
+          },
         }
       }
     ),
@@ -4399,9 +4291,6 @@
     'template': null,
     'name': 'riouter-router'
   };
-
-  const route = _route;
-  const router = _router;
 
   // Import router.
 
@@ -4465,7 +4354,7 @@
       getComponent
     ) {
       return template(
-        '<router expr246="expr246"></router>',
+        '<router expr0="expr0"></router>',
         [
           {
             'type': bindingTypes.TAG,
@@ -4480,7 +4369,7 @@
             'slots': [
               {
                 'id': 'default',
-                'html': '<nav><span route="a">\n        Link A\n      </span><span route="b">\n        Link B\n      </span><span route="c">\n        Link C\n      </span></nav><main><route expr247="expr247" path="a"></route><route expr248="expr248" path="b"></route><route expr249="expr249" path="c"></route></main>',
+                'html': '<nav><span route="a">\n        Link A\n      </span><span route="b">\n        Link B\n      </span><span route="c">\n        Link C\n      </span></nav><main><route expr1="expr1" path="a"></route><route expr2="expr2" path="b"></route><route expr3="expr3" path="c"></route></main>',
 
                 'bindings': [
                   {
@@ -4502,8 +4391,8 @@
                     ],
 
                     'attributes': [],
-                    'redundantAttribute': 'expr247',
-                    'selector': '[expr247]'
+                    'redundantAttribute': 'expr1',
+                    'selector': '[expr1]'
                   },
                   {
                     'type': bindingTypes.TAG,
@@ -4566,8 +4455,8 @@
                       }
                     ],
 
-                    'redundantAttribute': 'expr248',
-                    'selector': '[expr248]'
+                    'redundantAttribute': 'expr2',
+                    'selector': '[expr2]'
                   },
                   {
                     'type': bindingTypes.TAG,
@@ -4588,8 +4477,8 @@
                     ],
 
                     'attributes': [],
-                    'redundantAttribute': 'expr249',
-                    'selector': '[expr249]'
+                    'redundantAttribute': 'expr3',
+                    'selector': '[expr3]'
                   }
                 ]
               }
@@ -4623,13 +4512,13 @@
                 'evaluate': function(
                   scope
                 ) {
-                  return 'true';
+                  return true;
                 }
               }
             ],
 
-            'redundantAttribute': 'expr246',
-            'selector': '[expr246]'
+            'redundantAttribute': 'expr0',
+            'selector': '[expr0]'
           }
         ]
       );
@@ -4658,4 +4547,4 @@
   return App;
 
 })));
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=App.js.map

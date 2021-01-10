@@ -370,7 +370,7 @@ class Dispatcher {
   /**
    * Invokes the callback functions matching the event name.
    * @param {String} name Event name.
-   * @param {*} data Variables to give to the callback function.
+   * @param {Any} data Variables to give to the callback function.
    */
 
 
@@ -397,95 +397,7 @@ class Dispatcher {
 
 }
 
-class ObjectUtils {
-  /**
-   * Deeply assign a series of objects properties together.
-   * @param {Object} target Target object to assign onto.
-   * @param  {...Object} sources Sources to assign with.
-   * @returns {Object} Target object with sources values assigned.
-   */
-  static deepAssign(target) {
-    for (var _len = arguments.length, sources = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      sources[_key - 1] = arguments[_key];
-    }
-
-    if (!sources.length) {
-      return target;
-    }
-
-    const source = sources.shift();
-
-    if (ObjectUtils.isObject(target) && ObjectUtils.isObject(source)) {
-      for (const key in source) {
-        if (ObjectUtils.isObject(source[key])) {
-          if (!target[key]) {
-            Object.assign(target, {
-              [key]: {}
-            });
-          }
-
-          ObjectUtils.deepAssign(target[key], source[key]);
-        } else {
-          Object.assign(target, {
-            [key]: source[key]
-          });
-        }
-      }
-    }
-
-    return ObjectUtils.deepAssign(target, ...sources);
-  }
-  /**
-   * Check whether the value is an object.
-   * @param {Any} value Value of unknown type.
-   * @returns {Boolean} Whether the value is an object.
-   */
-
-
-  static isObject(value) {
-    return value && typeof value === 'object' && !Array.isArray(value);
-  }
-
-}
-
 // Import external modules.
-const pathToRegexpOptions = {
-  sensitive: false,
-  strict: false,
-  end: true,
-  start: true,
-  delimiter: '/#?',
-  encode: undefined,
-  endsWith: undefined,
-  prefixes: './'
-};
-class Route extends Dispatcher {
-  constructor(path, options) {
-    super();
-    this._options = ObjectUtils.deepAssign(pathToRegexpOptions, options);
-    this.path = path;
-    this._regexp = pathToRegexp(this.path, [], this._options);
-  }
-
-  destroy() {
-    this._regexp = null;
-    this.path = null;
-    this._options = null;
-    super.destroy();
-  }
-  /**
-   * Check if path matches route
-   * @param {String} path Path to match against
-   */
-
-
-  match(path) {
-    return this._regexp.test(path);
-  }
-
-}
-
-// Import local modules.
 
 class Router extends Dispatcher {
   constructor(options) {
@@ -493,77 +405,80 @@ class Router extends Dispatcher {
       options = null;
     }
 
-    super();
-    this._options = ObjectUtils.deepAssign({
-      basePath: null,
+    super(); // Overwrite default with given options.
+
+    this._options = Object.assign({
+      basePath: '',
       updateHistory: false,
-      pathToRegexp: pathToRegexpOptions
+      pathToRegexp: {}
     }, options);
-    this.pathCurrent = null;
-    this.routeCurrent = null;
-    this.routes = [];
+    this._pathCurrent = null;
+    this._routes = {};
+    this._routeCurrent = null;
   }
 
   destroy() {
-    for (const route in this.routes) {
-      route.destroy();
-    }
-
     this._options = null;
+    this._pathCurrent = null;
+    this._routeCurrent = null;
+    this._routes = null;
     super.destroy();
   }
 
-  createRoute(path, options) {
-    if (path === void 0) {
-      path = null;
-    }
+  getPath() {
+    return this._pathCurrent;
+  }
 
+  createRoute(path, options) {
     if (options === void 0) {
-      options = null;
+      options = {};
     }
 
     // Create new route.
-    const route = new Route(path, ObjectUtils.deepAssign(this._options.pathToRegexp, options)); // Add route to list.
+    const regexp = pathToRegexp(path, [], options);
 
-    this.routes.push(route); // Dispatch create event.
+    const match = _path => {
+      return regexp.test(_path);
+    }; // Add route to list.
 
-    this.dispatch('create', {
-      routes: this.routes,
-      route: route
+
+    this._routes[path] = match; // Dispatch create event.
+
+    this.dispatch('created', {
+      route: path,
+      router: this
     }); // Return route.
 
-    return route;
+    return path;
+  }
+
+  removeRoute(path) {
+    delete this._routes[path];
+  }
+
+  getRoutes() {
+    return Object.keys(this._routes);
   }
 
   push(path) {
-    // Check type.
-    if (typeof path !== 'string') {
-      return false;
-    } // Remove base url, if present.
-
-
+    // Remove base url, if present.
     const pathNew = path.replace(this._options.basePath, '');
-    const pathIsNew = this.pathCurrent !== pathNew;
-    this.pathCurrent = pathNew; // Find matching routes.
+    const pathIsNew = this._pathCurrent !== pathNew;
+    this._pathCurrent = pathNew; // Find matching routes.
 
-    let routeNew = null;
+    for (const routePath in this._routes) {
+      const match = this._routes[routePath];
 
-    for (let i = 0; i < this.routes.length; i++) {
-      const route = this.routes[i];
-
-      if (!route.match(this.pathCurrent)) {
+      if (!match(this._pathCurrent)) {
         continue;
-      } // Store current route.
+      }
 
-
-      routeNew = route;
+      this._routeCurrent = routePath;
+      break;
     }
 
-    const routeIsNew = this.routeCurrent !== routeNew;
-    this.routeCurrent = routeNew;
-
     if (pathIsNew) {
-      // Update page history.
+      // Update page history if options set and window global exists.
       if (this._options.updateHistory && typeof window !== 'undefined') {
         // Construct url.
         const url = path.includes(this._options.basePath) ? path : this._options.basePath + path; // Check if url is not current url.
@@ -575,26 +490,29 @@ class Router extends Dispatcher {
       } // Dispatch event on router.
 
 
-      this.dispatch('push', {
-        router: this,
-        route: this.routeCurrent,
-        path: this.pathCurrent
+      this.dispatch('pushed', {
+        path: this._pathCurrent,
+        route: this._routeCurrent,
+        router: this
       });
-    }
-
-    if (routeIsNew) {
-      // Dispatch event on route.
-      if (this.routeCurrent) {
-        this.routeCurrent.dispatch('push', {
-          router: this,
-          route: this.routeCurrent,
-          path: this.pathCurrent
-        });
-      }
     }
   }
 
 }
+
+const EACH = 0;
+const IF = 1;
+const SIMPLE = 2;
+const TAG = 3;
+const SLOT = 4;
+
+var bindingTypes = {
+  EACH,
+  IF,
+  SIMPLE,
+  TAG,
+  SLOT
+};
 
 /**
  * Convert a string from camel case to dash-case
@@ -673,20 +591,6 @@ const replaceChild = (newNode, replaced) => replaced && replaced.parentNode && r
 const 
   IS_PURE_SYMBOL = Symbol.for('pure'),
   PARENT_KEY_SYMBOL = Symbol('parent');
-
-const EACH = 0;
-const IF = 1;
-const SIMPLE = 2;
-const TAG = 3;
-const SLOT = 4;
-
-var bindingTypes = {
-  EACH,
-  IF,
-  SIMPLE,
-  TAG,
-  SLOT
-};
 
 const ATTRIBUTE = 0;
 const EVENT = 1;
@@ -2009,16 +1913,23 @@ function create$6(html, bindings = []) {
   }
 }
 
-const pure = function pure(func) {
-  func[IS_PURE_SYMBOL] = true;
-  return func;
+/**
+ * Marks given component as pure component. Is a copy of Riot's own pure function.
+ * Because I don't want to import the entire library for just one function.
+ * @param {Function|Object} component Function to add pure symbol to.
+ * @returns {Function|Object} Component marked as pure.
+ */
+
+const pure = function pure(component) {
+  component[IS_PURE_SYMBOL] = true;
+  return component;
 };
 
-const ROUTER_COMPONENT = Symbol('router');
+const ROUTER_COMPONENT = Symbol('riouter');
 
 // Import external modules.
 
-var _route = {
+var route = {
   'css': null,
 
   'exports': pure(
@@ -2026,12 +1937,6 @@ var _route = {
       const getAttribute = name => attributes && attributes.find(attribute => attribute.name === name);
 
       return {
-        // Variables
-        active: null,
-        el: null,
-        root: null,
-        router: null,
-        state: null,
         // Lifcycle methods.
         mount(element, context) {
           // Exit early if there are no slots.
@@ -2052,11 +1957,11 @@ var _route = {
           // Get router from parent component.
           this.router = context[ROUTER_COMPONENT].router;
 
-          const path = this.root.getAttribute('path');
-          if (!path) {
+          this.path = this.root.getAttribute('path');
+          if (!this.path) {
             throw new Error('No path found for route component.')
           }
-          this.route = this.router.createRoute(path);
+          this.route = this.router.createRoute(this.path);
 
           this.handleRouteChange = ({ route }) => {
             const active = this.route === route;
@@ -2069,14 +1974,14 @@ var _route = {
             this.update(context);
           };
 
-          this.router.addListener('push', this.handleRouteChange);
+          this.router.addListener('pushed', this.handleRouteChange);
         },
         update(context) {
           if (this.active) {
             // Dispatch on mounted event.
             const onBeforeMount = getAttribute('onBeforeMount');
             if (onBeforeMount) {
-              onBeforeMount.evaluate(context)(this, this.route, this.router.pathCurrent);
+              onBeforeMount.evaluate(context)(this, this.route, this.router.getPath());
             }
 
             const element = document.createElement('div');
@@ -2088,13 +1993,13 @@ var _route = {
             // Dispatch on mounted event.
             const onMounted = getAttribute('onMounted');
             if (onMounted) {
-              onMounted.evaluate(context)(this, this.route, this.router.pathCurrent);
+              onMounted.evaluate(context)(this, this.route, this.router.getPath());
             }
           } else {
             // Dispatch on unmounted event.
             const onBeforeUnmount = getAttribute('onBeforeUnmount');
             if (onBeforeUnmount) {
-              onBeforeUnmount.evaluate(context)(this, this.route, this.router.pathCurrent);
+              onBeforeUnmount.evaluate(context)(this, this.route, this.router.getPath());
             }
 
             this.slot.unmount({
@@ -2104,13 +2009,16 @@ var _route = {
             // Dispatch on unmounted event.
             const onUnmounted = getAttribute('onUnmounted');
             if (onUnmounted) {
-              onUnmounted.evaluate(context)(this, this.route, this.router.pathCurrent);
+              onUnmounted.evaluate(context)(this, this.route, this.router.getPath());
             }
           }
         },
         unmount(...args) {
           // Stop listening to router changes
-          this.router.removeListener('push', this.handleRouteChange);
+          this.router.removeListener('pushed', this.handleRouteChange);
+
+          // Remove route from router.
+          this.router.removeRoute(this.path);
 
           // Unmount slot.
           this.slot.unmount(...args);
@@ -2128,7 +2036,7 @@ var _route = {
 const defer = window.requestAnimationFrame || window.setTimeout;
 const cancelDefer = window.cancelAnimationFrame || window.clearTimeout;
 
-var _router = {
+var router = {
   'css': null,
 
   'exports': pure(
@@ -2144,12 +2052,6 @@ var _router = {
       };
 
       return {
-        // Variables.
-        deferred: null,
-        el: null,
-        root: null,
-        router: null,
-        slot: null,
         // Lifecyle methods.
         mount(element, context) {
           if (!slots || !slots.length) {
@@ -2159,10 +2061,11 @@ var _router = {
           // Set root element.
           this.el = this.root = element;
           this.state = {};
-          const updateHistory = getAttribute('updateHistory');
+          let updateHistory = getAttribute('updateHistory');
+          updateHistory = updateHistory ? (!!updateHistory.evaluate(context)) : false;
           this.router = new Router({
             basePath: getBase(),
-            updateHistory: updateHistory && updateHistory !== 'false',
+            updateHistory: updateHistory,
           });
 
           // Immidiatly push location.
@@ -2178,7 +2081,7 @@ var _router = {
 
           const onBeforeStart = getAttribute('onBeforeStart');
           if (onBeforeStart) {
-            onBeforeStart.evaluate(context)(this, this.router, this.router.pathCurrent);
+            onBeforeStart.evaluate(context)(this, this.router, this.router.getPath());
           }
 
           this.slot.mount(this.root, {
@@ -2187,17 +2090,7 @@ var _router = {
 
           const onStart = getAttribute('onStart');
           if (onStart) {
-            onStart.evaluate(context)(this, this.router, this.router.pathCurrent);
-          }
-        },
-        update(context) {
-          // Defer update to prevent endless recursion.
-          if (this.slot) {
-            cancelDefer(this.deferred);
-
-            this.deferred = defer(() => {
-              this.slot.update({}, this);
-            });
+            onStart.evaluate(context)(this, this.router, this.router.getPath());
           }
         },
         unmount(...args) {
@@ -2212,6 +2105,18 @@ var _router = {
           // Destroy router.
           this.router.destroy();
         },
+        update(context) {
+          // Defer update to prevent endless recursion.
+          if (this.slot) {
+            if (this.deferred) {
+              cancelDefer(this.deferred);
+            }
+
+            this.deferred = defer(() => {
+              this.slot.update({}, this);
+            });
+          }
+        },
       }
     }
   ),
@@ -2220,10 +2125,5 @@ var _router = {
   'name': 'riouter-router'
 };
 
-const Route$1 = Route;
-const Router$1 = Router;
-const route = _route;
-const router = _router;
-
-export { Route$1 as Route, Router$1 as Router, route, router };
+export { Router, route, router };
 //# sourceMappingURL=riouter.esm.js.map

@@ -1,22 +1,17 @@
 <riouter-route>
   <script>
     // Import external modules.
-    import { template, bindingTypes } from '@riotjs/dom-bindings'
+    import bindingTypes from '@riotjs/util/binding-types.js'
+    import template from '@riotjs/dom-bindings/src/template.js'
 
     // Import internal libraries.
-    import pure from '../utils/pure.js'
-    import { ROUTER_COMPONENT } from '../utils/symbols.js'
+    import pure from '../util/pure.js'
+    import { ROUTER_COMPONENT } from '../util/symbols.js'
 
     export default pure(({ slots, attributes, props }) => {
       const getAttribute = name => attributes && attributes.find(attribute => attribute.name === name)
 
       return {
-        // Variables
-        active: null,
-        el: null,
-        root: null,
-        router: null,
-        state: null,
         // Lifcycle methods.
         mount(element, context) {
           // Exit early if there are no slots.
@@ -37,11 +32,11 @@
           // Get router from parent component.
           this.router = context[ROUTER_COMPONENT].router
 
-          const path = this.root.getAttribute('path')
-          if (!path) {
+          this.path = this.root.getAttribute('path')
+          if (!this.path) {
             throw new Error('No path found for route component.')
           }
-          this.route = this.router.createRoute(path)
+          this.route = this.router.createRoute(this.path)
 
           this.handleRouteChange = ({ route }) => {
             const active = this.route === route
@@ -54,14 +49,14 @@
             this.update(context)
           }
 
-          this.router.addListener('push', this.handleRouteChange)
+          this.router.addListener('pushed', this.handleRouteChange)
         },
         update(context) {
           if (this.active) {
             // Dispatch on mounted event.
             const onBeforeMount = getAttribute('onBeforeMount')
             if (onBeforeMount) {
-              onBeforeMount.evaluate(context)(this, this.route, this.router.pathCurrent)
+              onBeforeMount.evaluate(context)(this, this.route, this.router.getPath())
             }
 
             const element = document.createElement('div')
@@ -73,13 +68,13 @@
             // Dispatch on mounted event.
             const onMounted = getAttribute('onMounted')
             if (onMounted) {
-              onMounted.evaluate(context)(this, this.route, this.router.pathCurrent)
+              onMounted.evaluate(context)(this, this.route, this.router.getPath())
             }
           } else {
             // Dispatch on unmounted event.
             const onBeforeUnmount = getAttribute('onBeforeUnmount')
             if (onBeforeUnmount) {
-              onBeforeUnmount.evaluate(context)(this, this.route, this.router.pathCurrent)
+              onBeforeUnmount.evaluate(context)(this, this.route, this.router.getPath())
             }
 
             this.slot.unmount({
@@ -89,13 +84,16 @@
             // Dispatch on unmounted event.
             const onUnmounted = getAttribute('onUnmounted')
             if (onUnmounted) {
-              onUnmounted.evaluate(context)(this, this.route, this.router.pathCurrent)
+              onUnmounted.evaluate(context)(this, this.route, this.router.getPath())
             }
           }
         },
         unmount(...args) {
           // Stop listening to router changes
-          this.router.removeListener('push', this.handleRouteChange)
+          this.router.removeListener('pushed', this.handleRouteChange)
+
+          // Remove route from router.
+          this.router.removeRoute(this.path)
 
           // Unmount slot.
           this.slot.unmount(...args)

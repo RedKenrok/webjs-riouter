@@ -1,7 +1,7 @@
 {
   "name": "riouter",
   "packagename": "Rioter",
-  "description": "Alternative RiotJS router.",
+  "description": "RiotJS router.",
   "keywords": [
     "riouter",
     "riot",
@@ -16,7 +16,7 @@
     "name": "Ron Dekker",
     "website": "https://rondekker.com"
   },
-  "version": "0.2.1",
+  "version": "1.0.0",
   "license": "MIT",
   "main": "src/index.js",
   "browser": "dst/riouter.js",
@@ -31,7 +31,9 @@
   "files": [
     "dst/",
     "src/",
-    "README.md"
+    "CHANGELOG.md",
+    "README.md",
+    "Router.js"
   ],
   "scripts": {
     "build": "NODE_ENV=production rollup -c",
@@ -41,7 +43,7 @@
     "develop": "NODE_ENV=development rollup -c -w",
     "develop:example": "NODE_ENV=development rollup -c ./example/rollup.config.js -w",
     "lint": "eslint src/*.js src/**/*.js src/components/*.html example/src/*.js example/src/*.html --fix",
-    "prepublishOnly": "yarn run lint && yarn run build",
+    "prepublishOnly": "yarn run lint && yarn run build && yarn run build:example",
     "serve": "yarn run serve"
   },
   "dependencies": {

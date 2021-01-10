@@ -5,7 +5,7 @@
     The updateHistory attribute is set which will automatically update the window.history's state.
   -->
   <router base="{ (window.location.href.slice(-1) === '/') ? window.location.href : (window.location.href + '/') }"
-    onStart="{ onRouterStart }" updateHistory="{ 'true' }">
+    onStart="{ onRouterStart }" updateHistory="{ true }">
 
     <!-- Add elements which on click will trigger the route change. -->
     <nav>

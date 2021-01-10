@@ -1,9 +1,3 @@
-import _Route from './utils/Route.js'
-import _Router from './utils/Router.js'
-import _route from './components/route.html'
-import _router from './components/router.html'
-
-export const Route = _Route
-export const Router = _Router
-export const route = _route
-export const router = _router
+export { default as Router } from './Router.js'
+export { default as route } from './components/route.html'
+export { default as router } from './components/router.html'
