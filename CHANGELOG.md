@@ -11,3 +11,9 @@
 - Fixed updateHistory attribute of `router` component.
 - Removed `Route` class.
 - Reduced build size.
+
+## 2.0.0
+
+- Updated to latest version of Riot.
+- Simplified building process excluding the need for compiling components.
+- Fix several bugs.

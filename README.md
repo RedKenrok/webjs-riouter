@@ -17,7 +17,7 @@
 
 - Riouter can have multiple router instances on a single page. Even a router within a route is possible.
 - Riouter can control whether the browsers session history is changed by the router.
-- Riouter does not have a `initDomListeners` method. (It is trivial to write a solution yourself, see  the usage example below or the `example/src/app.html`'s `onRouterStart` function.)
+- Riouter does not have a `initDomListeners` method. (It is trivial to write a solution yourself, see the usage example below or the `example/src/app.html`'s `onRouterStart` function.)
 
 ## Install
 
@@ -37,13 +37,13 @@ yarn add riouter
 <app>
   <router base="{ window.location.href }" onStarted="{ onRouterStarted }">
     <nav>
-      <span route="home">
+      <button route="home">
         Home
-      </span>
+      </button>
 
-      <span route="about">
+      <button route="about">
         About
-      </span>
+      </button>
     </nav>
 
     <route path="home">
@@ -57,7 +57,7 @@ yarn add riouter
 
   <script>
     // Import router components.
-    import { router, route } from '../../src/index.js'
+    import { router, route } from 'riouter'
 
     export default {
       components: {
@@ -66,22 +66,25 @@ yarn add riouter
         router: router,
       },
       onRouterStarted(routerComponent, router) {
-        // Get navigation elements.
-        this.root.querySelectorAll('span[route]').forEach(links => {
-          // Listen elements being clicked.
-          links.addEventListener('click', (_event) => {
-            // Get target with link.
-            const target = _event.target.closest('span[route]')
-            const targetRoute = target.getAttribute('route')
-            // Check if route is set and not already active.
-            if (!targetRoute || targetRoute === this.state.activeRoute) {
+        this.$('router')
+          .addEventListener('click', (event) => {
+            // Check if click is relevant.
+            const target = event.target.closest('button[route]')
+            if (!target) {
               return
             }
+            event.preventDefault()
+
+            // Check if route is not already active.
+            const targetRoute = target.getAttribute('route')
+            if (targetRoute === this.state.activeRoute) {
+              return
+            }
+
             // Invoke route change.
             this.state.activeRoute = targetRoute
             router.push(this.state.activeRoute)
           })
-        })
 
         // Set initial router path to 'home'.
         this.state.activeRoute = 'home'
@@ -264,13 +267,13 @@ The router also supports lazy loading. Simply use [@riotjs/lazy](https://github.
 <app>
   <router base="{ window.location.href }" onStarted="{ onRouterStarted }">
     <nav>
-      <span route="home">
+      <button route="home">
         Home
-      </span>
+      </button>
 
-      <span route="about">
+      <button route="about">
         About
-      </span>
+      </button>
     </nav>
 
     <route path="home">
@@ -287,7 +290,7 @@ The router also supports lazy loading. Simply use [@riotjs/lazy](https://github.
     import lazy from '@riotjs/lazy'
 
     // Import router components.
-    import { router, route } from '../../src/index.js'
+    import { router, route } from 'riouter'
 
     export default {
       components: {

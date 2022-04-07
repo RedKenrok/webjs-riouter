@@ -2,7 +2,6 @@
 import _package from './package.json'
 // Rollup plugins.
 import rollupBabel from '@rollup/plugin-babel'
-import rollupCommonJS from '@rollup/plugin-commonjs'
 import rollupResolve from '@rollup/plugin-node-resolve'
 import rollupRiot from 'rollup-plugin-riot'
 import { terser as rollupTerser } from 'rollup-plugin-terser'
@@ -75,7 +74,6 @@ const baseConfig = {
       extensions: extensions,
       jsnext: true,
     }),
-    rollupCommonJS(),
     rollupRiot({
       ext: 'html',
     }),
