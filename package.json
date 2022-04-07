@@ -40,7 +40,7 @@
     "dev:example": "yarn run develop:example",
     "develop": "NODE_ENV=development rollup -c -w",
     "develop:example": "NODE_ENV=development rollup -c ./example/rollup.config.js -w",
-    "lint": "eslint src/*.js src/**/*.js src/components/*.html example/src/*.js example/src/*.html --fix",
+    "lint": "eslint src/*.js src/**/*.js example/src/*.js example/src/*.html --fix",
     "prepublishOnly": "yarn run lint && yarn run build && yarn run build:example",
     "serve": "yarn run serve"
   },

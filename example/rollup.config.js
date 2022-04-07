@@ -1,5 +1,4 @@
 // Rollup plugins.
-import rollupCommonJS from '@rollup/plugin-commonjs'
 import rollupResolve from '@rollup/plugin-node-resolve'
 import rollupRiot from 'rollup-plugin-riot'
 
@@ -19,7 +18,6 @@ const config = {
       ],
       jsnext: true,
     }),
-    rollupCommonJS(),
     rollupRiot({
       ext: 'html',
     }),
